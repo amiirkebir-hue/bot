@@ -1,23 +1,68 @@
 import telebot
 from telebot import types
+import requests
 
 TOKEN = "8489901741:AAHaxVgKb3TXeFtBUqSw2_qRopg4E_2SGVE"
 bot = telebot.TeleBot(TOKEN)
 
+# URL فایل API
+API_URL = "https://raw.githubusercontent.com/amiirkebir-hue/bot/refs/heads/main/api"
+NEWS_CHANNEL = "https://t.me/+EHxGG4vy1bVlYTU0"  # کانال مقصد برای تبلیغ
+
+# دکمه های شیشه ای استارت
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    bot_btn = types.KeyboardButton("اتصال به ربات")
-    support_btn = types.KeyboardButton("اتصال به پشتیبانی")
+    markup = types.InlineKeyboardMarkup()
+    bot_btn = types.InlineKeyboardButton("اتصال به ربات", callback_data="connect_bot")
+    support_btn = types.InlineKeyboardButton("اتصال به پشتیبانی", url="https://t.me/amirlphastam")
     markup.add(bot_btn, support_btn)
     
     bot.send_message(message.chat.id, "ربات استارت شد. چه کاری از دستم بر میاد؟", reply_markup=markup)
 
-@bot.message_handler(func=lambda message: True)
-def handle_buttons(message):
-    if message.text == "اتصال به ربات":
-        bot.send_message(message.chat.id, "کد ربات در حال آپدیت می‌باشد…")
-    elif message.text == "اتصال به پشتیبانی":
-        bot.send_message(message.chat.id, "برای ارتباط با پشتیبانی روی لینک زیر کلیک کنید:\n@amirlphastam")
+# هندلر دکمه های شیشه ای
+@bot.callback_query_handler(func=lambda call: True)
+def callback_query(call):
+    try:
+        # پاک کردن پیام قبلی
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    except:
+        pass
+    
+    if call.data == "connect_bot":
+        bot.send_message(call.message.chat.id, "کد ربات در حال آپدیت می‌باشد…")
 
-bot.polling()
+# /api
+@bot.message_handler(commands=['api'])
+def api_command(message):
+    msg = bot.send_message(message.chat.id, "لطفا ای پی ای خود را وارد کنید:")
+    bot.register_next_step_handler(msg, check_api)
+
+def check_api(message):
+    user_api = message.text
+    try:
+        response = requests.get(API_URL).text.splitlines()
+    except:
+        bot.send_message(message.chat.id, "خطا در اتصال به سرور API")
+        return
+    
+    if user_api in response:
+        bot.send_message(message.chat.id, "API تایید شد! حالا می‌توانید از /news استفاده کنید.")
+    else:
+        bot.send_message(message.chat.id, "API نامعتبر است.")
+
+# /news
+@bot.message_handler(commands=['news'])
+def news_command(message):
+    msg = bot.send_message(message.chat.id, "لطفا تبلیغ خود را وارد کنید:")
+    bot.register_next_step_handler(msg, send_news)
+
+def send_news(message):
+    news_text = message.text
+    user_id = message.from_user.username or message.from_user.first_name
+    try:
+        bot.send_message(chat_id=NEWS_CHANNEL, text=f"تبلیغ از @{user_id}:\n{news_text}")
+        bot.send_message(message.chat.id, "تبلیغ شما با موفقیت ارسال شد!")
+    except:
+        bot.send_message(message.chat.id, "خطا در ارسال تبلیغ. ربات در کانال ادمین باشد.")
+
+bot.infinity_polling()
