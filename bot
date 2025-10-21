@@ -7,7 +7,7 @@ bot = telebot.TeleBot(TOKEN)
 
 # URL فایل API
 API_URL = "https://raw.githubusercontent.com/amiirkebir-hue/bot/refs/heads/main/api"
-NEWS_CHANNEL = "https://t.me/+EHxGG4vy1bVlYTU0"  # کانال مقصد برای تبلیغ
+NEWS_CHANNEL = "@tablikhatsfg"  # کانال مقصد برای تبلیغ
 
 # دکمه های شیشه ای استارت
 @bot.message_handler(commands=['start'])
