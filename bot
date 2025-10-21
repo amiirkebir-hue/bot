@@ -27,9 +27,7 @@ def callback_query(call):
         bot.delete_message(call.message.chat.id, call.message.message_id)
     except:
         pass
-    
-    if call.data == "connect_bot":
-        bot.send_message(call.message.chat.id, "کد ربات در حال آپدیت می‌باشد…")
+    # دیگر کاری انجام نمی‌دهد
 
 # /api
 @bot.message_handler(commands=['api'])
